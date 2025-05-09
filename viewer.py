@@ -52,7 +52,6 @@ class Viewer(QLabel):
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lb_op = QLabel(self)
         self.lb_op.setStyleSheet("background-color:rgba(10,5,10,88);")
-        # self.lb_op.setSizePolicy(pol)
         # self.lb_op.hide()
         self.lb_op.setScaledContents(True)
         self.setScaledContents(True)
@@ -120,12 +119,11 @@ class VentanaPrincipal(QMainWindow):
         # image = r"otros/image2.gif"
         vly = QVBoxLayout(central_widget)
         self.wg = Viewer(parent=central_widget)
-        # self.wg.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
         self.wg.setImage(image_file=image)
 
         vly.addWidget(self.wg)
         self.setCentralWidget(central_widget)
-        # self.setLayout(vly)
+        self.setLayout(vly)
 
 
     def getQicon(self, str_b64:str):
