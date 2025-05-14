@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QSlider
 from viewer import Viewer, Card, Title
+from pathlib import Path
 
 
 class CardViewer(Viewer):
@@ -8,6 +9,8 @@ class CardViewer(Viewer):
         self.__configCardViewer()
 
     def __configCardViewer(self):
+        self.STEM = None
+        self.PATH = None
         self.lb_title = Title(self)
         self.lb_title.pos = 'bot'
         self.lb_num = Title(self)
@@ -26,6 +29,11 @@ class CardViewer(Viewer):
         super().resizeEvent(event)
         self.lb_title.moveUpdate()
         self.lb_num.moveUpdate()
+
+    def setImage(self, image_file):
+        super().setImage(image_file)
+        self.STEM = Path(image_file).stem
+        self.PATH = image_file
 
 
 class Base(QTableWidget):
