@@ -1,5 +1,31 @@
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QSlider
-from viewer import Viewer
+from viewer import Viewer, Card, Title
+
+
+class CardViewer(Viewer):
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        self.__configCardViewer()
+
+    def __configCardViewer(self):
+        self.lb_title = Title(self)
+        self.lb_title.pos = 'bot'
+        self.lb_num = Title(self)
+        self.lb_num.pos = 'nw'
+
+    def setOverlay(self, text:str='', bg:str='rgba(0,0,0,180)', **kw):
+        self.opConfig(text=text, bg=bg, **kw)
+
+    def setNum(self, num:str|int, **kw):
+        self.lb_num.setText(text=num, **kw)
+
+    def setTitle(self, text:str, **kw):
+        self.lb_title.setText(text=text, **kw)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.lb_title.moveUpdate()
+        self.lb_num.moveUpdate()
 
 
 class Base(QTableWidget):
@@ -29,18 +55,26 @@ class Base(QTableWidget):
     def _setImagesTest(self):
         self.clearContents()
 
-        vi1 = Viewer()
+        vi1 = CardViewer()
         vi1.setImage("otros/mod/uno.png")
         item = QTableWidgetItem("item uno")
         self.setItem(0, 0, item)
         self.setCellWidget(0, 0, vi1)
+        vi1.setNum('001', bg='black', fg='white')
+        vi1.setOverlay(text='iMAGE Uno')
+        # vi1.lb_num.moveUpdate()
+        vi1.setTitle('imagen uno')
 
-        vi2 = Viewer()
+        vi2 = Card()
         vi2.setImage("otros/mod/dos.jpg")
         item2 = QTableWidgetItem("item dos ab")
         self.setItem(0, 1, item2)
         self.setCellWidget(0, 1, vi2)
         self.heightAuto()
+        # vi2.setOverlay()
+        vi2.opConfig(text='TITLE')
+        vi2.setTitle('Image NUM')
+        vi2.setNum('003', bg='black')
 
 
 if __name__ == '__main__':
@@ -77,6 +111,7 @@ if __name__ == '__main__':
 
             vly.addWidget(self.splitter)
             self.setCentralWidget(central_widget)
+            self.setLayout(vly)
 
         def test_wg(self):
             self.wg.setDim(rows=5, cols=2)

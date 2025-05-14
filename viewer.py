@@ -41,8 +41,8 @@ class GifViewer(QMovie):
 class Viewer(QLabel):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
-        bg = "pink"
-        self.setStyleSheet(f'background-color:{bg};')
+        # bg = "pink"
+        # self.setStyleSheet(f'background-color:{bg};')
         self.__configViewer()
 
     def __configViewer(self):
@@ -95,11 +95,15 @@ class Viewer(QLabel):
         if hasattr(self, 'gviewer'):
             self.gviewer.setPaused(True)
 
-    def setOverlay(self, b:bool=True):
+    def showOverlay(self, b:bool=True):
         self.lb_op.hide() if b else self.lb_op.show()
         self.OPACITY = b
 
     def opConfig(self, text:str, **kw):
+        """text:str,
+        fg:str='white', bg:str='rgba(10,5,10,160)',
+        size:int=12, bold:bool=True, name:str='Consolas',
+        align:str='c', mg:int=0"""
         self.lb_op.setText(text, **kw)
 
 
@@ -110,7 +114,7 @@ class Title(QLabel):
         
     def __configTitle(self):
         self.mod = 10
-        self.mg = 2
+        self.mg = 0
         self.h = 12
         self.w = 20
         self.x = 0
@@ -121,15 +125,21 @@ class Title(QLabel):
         # words = len(self.text())
 
     def setText(
-        self, text:str, fg:str='white', bg:str='blue',
+        self, text:str, fg:str='rgba(255,255,255,120)', bg:str='rgba(10,5,12,200)',
         size:int=7, bold:bool=True, name:str='Consolas',
         align:str='c'
     ):
-        text = f'{" "*self.mg}{text}{" "*self.mg}'
+        _ = "\u3164"
+        mg = f'{_}' * self.mg
+        text = f'{mg}{text}{mg}'
         super().setText(text)
         self.setFont(size, bold, name)
         self.setColors(fg, bg)
         self.setAlign(coord=align)
+
+        fom = self.fontMetrics()
+        w = fom.horizontalAdvance(str(text))+4
+        self.setFixedWidth(w)
 
     def moveUpdate(self):
         gm = self.parent().geometry()
@@ -179,7 +189,7 @@ class Overlay(Title, QLabel):
         self.setScaledContents(True)
 
     def setText(
-        self, text:str, fg:str='white', bg:str='rgba(10,5,10,160)',
+        self, text:str, fg:str='rgba(255,255,255,80)', bg:str='rgba(0,0,0,160)',
         size:int=12, bold:bool=True, name:str='Consolas',
         align:str='c', mg:int=0
     ):
@@ -199,10 +209,8 @@ class Card(Viewer):
         self.lb_title = Title(self)
         self.lb_title.pos = 'sw'
         self.lb_num = Title(self)
-        self.lb_num.mg = 1
-        self.lb_num.pos = 'sw'
-
-        self.opConfig(text='ALICE BONG\nPURPLE BITCH\n', align='sc')
+        # self.lb_num.mg = 1
+        self.lb_num.pos = 'se'
 
     def setTitle(self, text:str, **kw):
         """text: str,
@@ -213,10 +221,11 @@ class Card(Viewer):
             name: str = 'Consolas',
             align: str = 'c'"""
         self.lb_title.setText(text, **kw)
-        self.lb_title.x = 20
+        # self.lb_title.x = 20
         # self.lb_title.y = 14
 
     def setNum(self, text:str, **kw):
+        self.lb_num.mg = 0
         self.lb_num.setText(text, **kw)
 
     def resizeEvent(self, event):
@@ -248,9 +257,9 @@ class VentanaPrincipal(QMainWindow):
         # self.wg = Viewer(parent=central_widget)
         self.wg = Card(parent=central_widget)
         self.wg.setImage(image_file=image)
-        self.wg.setNum('05', bg='black')
         self.wg.setTitle(text='mi titulo uno', align='w')
-
+        self.wg.setNum('05', bg='black')
+        # self.wg.lb_num.pos = 'nw'
 
         vly.addWidget(self.wg)
         self.setCentralWidget(central_widget)
