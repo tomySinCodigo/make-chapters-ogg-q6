@@ -191,7 +191,7 @@ class Overlay(Title, QLabel):
     def setText(
         self, text:str, fg:str='rgba(255,255,255,80)', bg:str='rgba(0,0,0,160)',
         size:int=12, bold:bool=True, name:str='Consolas',
-        align:str='c', mg:int=0
+        align:str='nc', mg:int=0
     ):
         text = f'{" "*mg}{text}{" "*mg}'
         super(Title, self).setText(text)

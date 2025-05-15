@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QSlider
-from viewer import Viewer, Card, Title
+from gallery.viewer import Viewer, Card, Title
 from pathlib import Path
 
 
@@ -14,7 +14,8 @@ class CardViewer(Viewer):
         self.lb_title = Title(self)
         self.lb_title.pos = 'bot'
         self.lb_num = Title(self)
-        self.lb_num.pos = 'nw'
+        self.lb_num.pos = 'sw'
+        self.lb_title.hide()
 
     def setOverlay(self, text:str='', bg:str='rgba(0,0,0,180)', **kw):
         self.opConfig(text=text, bg=bg, **kw)
@@ -36,7 +37,7 @@ class CardViewer(Viewer):
         self.PATH = image_file
 
 
-class Base(QTableWidget):
+class GalleryBase(QTableWidget):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         self.__configBase()
@@ -46,6 +47,7 @@ class Base(QTableWidget):
         self.vh = self.verticalHeader()
         self.hh.setVisible(False)
         self.vh.setVisible(True)
+        self.cellClicked.connect(self.selectCard)
 
     def setDim(self, rows:int, cols:int):
         self.clearContents()
@@ -59,6 +61,39 @@ class Base(QTableWidget):
         h = int(self.hh.sectionSize(0)/ar)
         for irow in range(self.rowCount()):
             self.setRowHeight(irow, h)
+
+    def getIndexes(self, n:int, cols:int=3) -> list:
+        return [(irow, icol) \
+            for irow, _ in enumerate(range(0,n,cols)) \
+            for icol in range(cols)]
+
+    def setImages(self, images:list, cols:int=3):
+        indexes = self.getIndexes(len(images), cols=cols)
+        self.setDim(rows=indexes[-1][0], cols=cols)
+        self.widthColumnsEquals()
+
+        for i, img in enumerate(images):
+            cv = CardViewer()
+            cv.setImage(img)
+            item = QTableWidgetItem(str(i))
+            ix = indexes[i]
+            self.setItem(ix[0], ix[1], item)
+            self.setCellWidget(ix[0], ix[1], cv)
+            cv.setNum(i, bg='black', fg='white')
+            cv.setOverlay(
+                text=Path(img).stem,
+                bg='rgba(0,0,0,120)',
+                fg='rgba(255,255,255,200)'
+            )
+            cv.setTitle(Path(img).stem)
+        self.heightAuto()
+
+    def selectCard(self, row=None, col=None):
+        wg = self.cellWidget(row, col)
+        name = wg.STEM
+        path = wg.PATH
+        print(name)
+        print(path)
 
     def _setImagesTest(self):
         self.clearContents()
@@ -110,7 +145,7 @@ if __name__ == '__main__':
             self.splitter = QSplitter(central_widget, orientation=Qt.Horizontal)
             self.splitter.splitterMoved.connect(self.onSplitMoved)
             fm = QListWidget(central_widget)
-            self.wg = Base(central_widget)
+            self.wg = GalleryBase(central_widget)
             self.test_wg()
             self.test_btn()
             self.btn.clicked.connect(self.wg._setImagesTest)
