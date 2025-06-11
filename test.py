@@ -71,29 +71,36 @@ class TestGallery(VentanaPrincipal):
         self.setGeometry(100,50,400,600)
         self.gb = GalleryBase()
         self.setMiWidget(self.gb)
+        self.gb.setRowCol(rows=1, cols=3)
+        self.gb.columnsEquals()
 
         self.timer = QTimer()
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(self.gb.heightAuto)
 
     def testMod(self):
-        self.gb.setRowCol(rows=2, cols=3)
-        self.gb.columnsEquals()
-
         r1 = 'T:/TAG/EJECUTABLES/RECURSOS/pro_plex/modelos'
         sf = SearchFiles(path=r1)
         images = sf.getImages()
-        self.gb.setImages(images=images)
-        self.gb.cellClicked.connect(self.selectModelo)
+        self.gb.setImages(images=images, cols=3)
+        self.gb.cellClicked.connect(self.selectCardViewer)
 
     def resizeEvent(self, event):
         return self.timer.start(400)
     
-    def selectModelo(self, row, col):
+    def selectCardViewer(self, row, col):
         select = self.gb.selectCard(row, col)
         if select:
             name, path = select
             print('name:: ', name, path)
+
+    def testPs(self):
+        ruta = 'T:/TAG/EJECUTABLES/RECURSOS/pro_plex/ps'
+        sf = SearchFiles(path=ruta)
+        images = sf.getImages()
+        self.gb.AR = 6/4
+        self.gb.setImages(images=images)
+        self.gb.cellClicked.connect(self.selectCardViewer)
 
 
 
@@ -103,6 +110,7 @@ if __name__ == '__main__':
     # vn = VentanaPrincipal()
     # vn = TestViewer()
     vn = TestGallery()
-    vn.testMod()
+    # vn.testMod()
+    vn.testPs()
     vn.show()
     sys.exit(app.exec())
