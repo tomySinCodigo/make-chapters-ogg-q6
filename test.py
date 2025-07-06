@@ -39,11 +39,6 @@ class VentanaPrincipal(QMainWindow):
         qicon = QIcon()
         qicon.addPixmap(pix)
         return qicon
-        
-    # def resizeEvent(self, event):
-    #     super().resizeEvent(event)
-    #     self.wg.resizeImage()
-        # print(self.geometry())
 
 
 class TestViewer(VentanaPrincipal):
@@ -101,8 +96,6 @@ class TestGallery(VentanaPrincipal):
         self.gb.AR = 6/4
         self.gb.setImages(images=images)
         self.gb.cellClicked.connect(self.selectCardViewer)
-
-
 
 
 if __name__ == '__main__':

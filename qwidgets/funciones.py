@@ -33,6 +33,29 @@ class SearchFiles:
         # return {Path(path).stem:path for path in self.bySuffix(suffixes=suffixes, ex=ex)}
         return self.bySuffix(suffixes=suffixes, ex=ex)
     
+    def getWalls(self) -> list:
+        data = []
+        folders = self.getDirs()
+        for folder in folders:
+            sf = SearchFiles(folder)
+            images = {Path(img).stem:img for img in sf.getFiles()}
+            name_folder = Path(folder).name.lower()
+            d = {
+                'name':name_folder,
+                'path':folder,
+                'images':images
+            }
+            if name_folder in images.keys():
+                d['wall'] = images[name_folder]
+            elif 'portada' in images.keys():
+                # sf = SearchFiles(folder)
+                # imgs = {Path(img).stem:img for img in sf.getFiles()}
+                d['wall'] = images['portada']
+            else:
+                d['wall'] = 'defo.png'
+            data.append(d)
+        return data
+    
 
 
 if __name__ == '__main__':
