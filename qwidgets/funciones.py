@@ -43,7 +43,8 @@ class SearchFiles:
             d = {
                 'name':name_folder,
                 'path':folder,
-                'images':images
+                'images':images,
+                'dir':folder
             }
             if name_folder in images.keys():
                 d['wall'] = images[name_folder]
@@ -60,12 +61,15 @@ class SearchFiles:
 
 if __name__ == '__main__':
     from pprint import pprint
-    r1 = 'T:/TAG/EJECUTABLES/RECURSOS/pro_plex/modelos'
-    sf = SearchFiles(r1)
+    # r1 = 'T:/TAG/EJECUTABLES/RECURSOS/pro_plex/modelos'
+    # sf = SearchFiles(r1)
     # res = sf.getFiles()
     # res = sf.bySuffix(['.jpg', '.png'], ex=['ava'])
-    res = sf.getImages()
-    print(f'TIPO:: {type(res)}')
-    pprint(res)
+    # res = sf.getImages()
+    # print(f'TIPO:: {type(res)}')
+    # pprint(res)
     # print(f'TIPO:: {type(next(res))}')
     # print(next(res))
+
+    # obten imagen (wall) de cada carpeta
+    r1 = 'T:/TAG/RECURSOS/personajes2'

@@ -49,8 +49,10 @@ class TestSelectS(QMainWindow):
         # 'path': 'T:/TAG/RECURSOS/personajes2/akame ga kill',
         # 'wall': 'T:/TAG/RECURSOS/personajes2/akame ga kill/akame ga kill.png'}
 
-        walls = [d.get('wall') for d in data]
-        self.gb_parent.setImages(images=walls, cols=2)
+        # walls = [d.get('wall') for d in data]
+        # self.gb_parent.setImages(images=walls, cols=2)
+        # usando setWalls
+        self.gb_parent.setWalls(data=data, cols=2)
         self.gb_parent.cellClicked.connect(self.itemChoice)
 
 
@@ -66,12 +68,32 @@ class TestSelectS(QMainWindow):
         self.timer.start(400)
 
     def itemChoice(self, row:int, col:int):
-        print(f'TIPO:: {type(row)}')
-        print(row, col)
         select = self.gb_parent.selectCard(row, col)
         if select:
             name, path = select
             print('name:: ', name, path)
+            sf = SearchFiles(path=path)
+            if name == '00':
+                images = []
+                parent = Path(path).parent.as_posix()
+                sf = SearchFiles(parent)
+                images = sf.getFiles()
+                dirs = sf.getDirs()
+                for folder in dirs:
+                    _sf = SearchFiles(path=folder)
+                    imgs = _sf.getImages()
+                    images.extend(imgs)
+                # pprint(images)
+                print(len(images))
+                self.gb_child.setImages(images=images, cols=3)
+            else:
+                images = sf.getImages()
+                if images:
+                    pprint(images)
+                    self.gb_child.setImages(images=images, cols=3)
+                else:
+                    print("no hay images")
+
 
 
 if __name__ == '__main__':
