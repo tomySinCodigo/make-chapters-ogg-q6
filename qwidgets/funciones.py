@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from random import randint
 
 
 class SearchFiles:
@@ -57,6 +58,26 @@ class SearchFiles:
             data.append(d)
         return data
     
+    def getOneImage(self, *args) -> str:
+        images = self.getImages(*args)
+        if images:
+            return images[randint(0, len(images))-1]
+        else:
+            return []
+        
+    def getOneImageData(self, *args) -> dict:
+        images = self.getImages(*args)
+        if images:
+            d = {}
+            _ = Path(images[randint(0, len(images))-1])
+            d['path'] = _.as_posix()
+            d['parent'] = _.parent
+            d['dirname'] = _.parent.stem
+            d['name'] = _.stem
+            return d
+        else:
+            return None
+    
 
 
 if __name__ == '__main__':
@@ -72,4 +93,7 @@ if __name__ == '__main__':
     # print(next(res))
 
     # obten imagen (wall) de cada carpeta
-    r1 = 'T:/TAG/RECURSOS/personajes2'
+    # r1 = 'T:/TAG/RECURSOS/personajes2'
+    # rser = "T:/TAG/RECURSOS/personajes2/sono bisque doll/Marin Kitagawa"
+    # sf = SearchFiles(rser)
+    # print(sf.getOneImage())

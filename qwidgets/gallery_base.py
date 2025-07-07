@@ -65,21 +65,39 @@ class GalleryBase(QTableWidget):
         self.setRowCol(rows=indexes[-1][0]+1, cols=cols)
         self.columnsEquals()
 
+        for index, elem in enumerate(images):
+            if isinstance(elem, dict):
+                d = images.pop(index)
+                images.insert(0, d)
+
         for i, img in enumerate(images):
             cv = CardViewer()
-            cv.setImage(image_file=img)
+            if isinstance(img, dict):
+                cv.setImage(image_file=img.get('path'))
+                name = img.get('dirname')
+                cv.setOverlay(
+                    text=name,
+                    bg='rgba(0,0,0,120)',
+                    fg='tgba(255,255,255, 210)'
+                )
+                cv.setTitle(name)
+                cv.setData({'name':name})
+            else:
+                cv.setImage(image_file=img)
+                cv.setOverlay(
+                    text=Path(img).stem,
+                    bg='rgba(0,0,0,120)',
+                    fg='tgba(255,255,255, 210)'
+                )
+                cv.setTitle(Path(img).stem)
+
             item = QTableWidgetItem(str(i))
             ix = indexes[i]
             self.setItem(ix[0], ix[1], item)
             self.setCellWidget(ix[0], ix[1], cv)
             # print('rc: ', ix[0], ix[1], img)
             cv.setNum(i, bg='black', fg='white')
-            cv.setOverlay(
-                text=Path(img).stem,
-                bg='rgba(0,0,0,120)',
-                fg='tgba(255,255,255, 210)'
-            )
-            cv.setTitle(Path(img).stem)
+
         self.heightAuto()
 
     def selectCard(self, row=None, col=None):

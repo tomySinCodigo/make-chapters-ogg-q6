@@ -54,6 +54,7 @@ class TestSelectS(QMainWindow):
         # usando setWalls
         self.gb_parent.setWalls(data=data, cols=2)
         self.gb_parent.cellClicked.connect(self.itemChoice)
+        self.gb_child.cellClicked.connect(self.itemChoiceChild)
 
 
     def getDirs(self, folder:str) -> list:
@@ -83,22 +84,44 @@ class TestSelectS(QMainWindow):
                     _sf = SearchFiles(path=folder)
                     imgs = _sf.getImages()
                     images.extend(imgs)
+                    extra = []
+                    print('subfolder:: ', _sf.getDirs())
+                    for subdir in _sf.getDirs():
+                        sfsub = SearchFiles(subdir)
+                        data = sfsub.getOneImageData()
+                        if data:
+                            extra.append(data)
+                    images.extend(extra)
                 # pprint(images)
                 print(len(images))
                 self.gb_child.setImages(images=images, cols=3)
             else:
                 images = sf.getImages()
+                extra = []
+                print('subfolder:: ', sf.getDirs())
+                for subdir in sf.getDirs():
+                    sfsub = SearchFiles(subdir)
+                    data = sfsub.getOneImageData()
+                    if data:
+                        extra.append(data)
+                images.extend(extra)
                 if images:
                     pprint(images)
                     self.gb_child.setImages(images=images, cols=3)
                 else:
                     print("no hay images")
 
+    def itemChoiceChild(self, row:int, col:int):
+        select = self.gb_child.selectCard(row, col)
+        if select:
+            name, path = select
+            print(name, path)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     vn = TestSelectS()
     vn.test2Galleries()
+    vn.setGeometry(100, 50, 950, 600)
     vn.show()
     sys.exit(app.exec())
