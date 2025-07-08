@@ -1,5 +1,3 @@
-import os
-os.environ['QT_LOGGING_RULES'] = '*=false'
 import sys
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QSizePolicy, QWidget,
@@ -38,6 +36,75 @@ class GifViewer(QMovie):
     def leaveEvent(self, event):
         if self.PLAY_FOCUS:
             self.setPaused(True)
+
+
+class Viewer(QLabel):
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        # bg = "pink"
+        # self.setStyleSheet(f'background-color:{bg};')
+        self.__configViewer()
+
+    def __configViewer(self):
+        self.reloadVariables()
+        pol = QSizePolicy(QSizePolicy.Policy.Ignored , QSizePolicy.Policy.Ignored)
+        self.setSizePolicy(pol)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.lb_op = QLabel(self)
+        self.lb_op = Overlay(self)
+        # self.lb_op.setStyleSheet("background-color:rgba(10,5,10,88);")
+        # self.lb_op.hide()
+        # self.lb_op.setScaledContents(True)
+        self.setScaledContents(True)
+
+    def reloadVariables(self):
+        self.IMAGE = None
+        self.OPACITY = True
+        self.VERTICAL = True
+        self.INFO = {}
+
+    def _setImageSimple(self, img_file:str):
+        self.pix = QPixmap(img_file)
+        self.setPixmap(self.pix)
+
+    def _setImageGif(self, img_file:str):
+        self.gviewer = GifViewer(img_file)
+        self.setMovie(self.gviewer)
+
+    def setImage(self, image_file:str):
+        self.IMAGE = QUrl.fromLocalFile(image_file).toLocalFile()
+        if image_file.endswith('.gif'):
+            self._setImageGif(image_file)
+        else:
+            self._setImageSimple(image_file)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        sz = event.size()
+        self.lb_op.setGeometry(0,0,sz.width(),sz.height())
+
+    def enterEvent(self, event):
+        if self.OPACITY:
+            self.lb_op.hide()
+        if hasattr(self, 'gviewer'):
+            self.gviewer.setPaused(False)
+
+    def leaveEvent(self, event):
+        if self.OPACITY:
+            self.lb_op.show()
+        if hasattr(self, 'gviewer'):
+            self.gviewer.setPaused(True)
+
+    def showOverlay(self, b:bool=True):
+        self.lb_op.show() if b else self.lb_op.hide()
+        self.OPACITY = b
+
+    def opConfig(self, text:str, **kw):
+        """text:str,
+        fg:str='white', bg:str='rgba(10,5,10,160)',
+        size:int=12, bold:bool=True, name:str='Consolas',
+        align:str='c', mg:int=0"""
+        self.lb_op.setText(text, **kw)
 
 
 class Title(QLabel):
@@ -131,83 +198,6 @@ class Overlay(Title, QLabel):
         self.setFont(size, bold, name)
         self.setColors(fg, bg)
         self.setAlign(coord=align)
-
-
-class Viewer(QLabel):
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
-        self.__configViewer()
-
-    def __configViewer(self):
-        self.reloadVariables()
-        pol = QSizePolicy(QSizePolicy.Policy.Ignored , QSizePolicy.Policy.Ignored)
-        self.setSizePolicy(pol)
-        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # self.lb_op = QLabel(self)
-        self.lb_op = Overlay(self)
-        # self.lb_op.setStyleSheet("background-color:rgba(10,5,10,88);")
-        # self.lb_op.hide()
-        # self.lb_op.setScaledContents(True)
-        self.setScaledContents(True)
-
-    def reloadVariables(self):
-        self.IMAGE = None
-        self.OPACITY = True
-        self.VERTICAL = True
-        self.INFO = {}
-
-    def _setImageSimple(self, img_file:str):
-        self.pix = QPixmap(img_file)
-        self.setPixmap(self.pix)
-
-    def _setImageGif(self, img_file:str):
-        self.gviewer = GifViewer(img_file)
-        self.setMovie(self.gviewer)
-
-    def setImage(self, image_file:str):
-        self.IMAGE = QUrl.fromLocalFile(image_file).toLocalFile()
-        if image_file.endswith('.gif'):
-            self._setImageGif(image_file)
-        else:
-            self._setImageSimple(image_file)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        sz = event.size()
-        self.lb_op.setGeometry(0,0,sz.width(),sz.height())
-
-    def enterEvent(self, event):
-        if self.OPACITY:
-            self.lb_op.hide()
-        if hasattr(self, 'gviewer'):
-            self.gviewer.setPaused(False)
-
-    def leaveEvent(self, event):
-        if self.OPACITY:
-            self.lb_op.show()
-        if hasattr(self, 'gviewer'):
-            self.gviewer.setPaused(True)
-
-    def showOverlay(self, b:bool=True):
-        self.lb_op.show() if b else self.lb_op.hide()
-        self.OPACITY = b
-
-    def opConfig(self, text:str, **kw):
-        """text:str,
-        fg:str='white', bg:str='rgba(10,5,10,160)',
-        size:int=12, bold:bool=True, name:str='Consolas',
-        align:str='c', mg:int=0"""
-        self.lb_op.setText(text, **kw)
-
-    def setOverlay(
-        self, text:str='', show:bool=True, **kw
-    ):
-        """text:str,
-        fg:str='white', bg:str='rgba(10,5,10,160)',
-        size:int=12, bold:bool=True, name:str='Consolas',
-        align:str='c', mg:int=0"""
-        self.opConfig(text, **kw)
-        self.showOverlay(show)
 
 
 class Card(Viewer):

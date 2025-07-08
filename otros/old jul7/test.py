@@ -77,7 +77,7 @@ class TestGallery(VentanaPrincipal):
         r1 = 'T:/TAG/EJECUTABLES/RECURSOS/pro_plex/modelos'
         sf = SearchFiles(path=r1)
         images = sf.getImages()
-        self.gb.setImages(files=images, cols=3)
+        self.gb.setImages(images=images, cols=3)
         self.gb.cellClicked.connect(self.selectCardViewer)
 
     def resizeEvent(self, event):
@@ -94,7 +94,7 @@ class TestGallery(VentanaPrincipal):
         sf = SearchFiles(path=ruta)
         images = sf.getImages()
         self.gb.AR = 6/4
-        self.gb.setImages(files=images)
+        self.gb.setImages(images=images)
         self.gb.cellClicked.connect(self.selectCardViewer)
 
 
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     # vn = VentanaPrincipal()
     # vn = TestViewer()
     vn = TestGallery()
-    vn.testMod()
-    # vn.testPs()
+    # vn.testMod()
+    vn.testPs()
     vn.show()
     sys.exit(app.exec())

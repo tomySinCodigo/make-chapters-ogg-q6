@@ -55,7 +55,6 @@ class Title(QLabel):
         self.pos = 'so'
         
         self.setFixedHeight(self.h)
-        # words = len(self.text())
 
     def setText(
         self, text:str, fg:str='rgba(255,255,255,120)', bg:str='rgba(10,5,12,200)',
@@ -75,28 +74,41 @@ class Title(QLabel):
         self.setFixedWidth(w)
 
     def moveUpdate(self):
-        gm = self.parent().geometry()
-        wp, hp = gm.width(), gm.height()
-        w , h = self.geometry().width(), self.geometry().height()
-        x, y = self.x, self.y
-        match self.pos:
-            case 'ne': x = wp - (w + x)
-            case 'sw' | 'bot':
-                y = hp - (self.h + y)
-                x = self.x
-            case 'se':
-                x = wp - (w + x)
-                y = hp - (h + y)
-        if self.pos in ('top', 'bot'):
-            self.setFixedWidth(wp - x)
-        self.move(x, y)
+        if not self.parent() or not self.parent().isVisible():
+            return
+            
+        try:
+            gm = self.parent().geometry()
+            wp, hp = gm.width(), gm.height()
+            
+            # Verificar que las dimensiones sean válidas
+            if wp <= 0 or hp <= 0:
+                return
+                
+            w , h = self.geometry().width(), self.geometry().height()
+            x, y = self.x, self.y
+            
+            match self.pos:
+                case 'ne': x = wp - (w + x)
+                case 'sw' | 'bot':
+                    y = hp - (self.h + y)
+                    x = self.x
+                case 'se':
+                    x = wp - (w + x)
+                    y = hp - (h + y)
+            if self.pos in ('top', 'bot'):
+                self.setFixedWidth(wp - x)
+            self.move(x, y)
+        except:
+            # Ignorar errores durante transiciones de maximizar/minimizar
+            pass
 
     def setColors(self, fg:str='white', bg:str='blue'):
         self.setStyleSheet(f'color:{fg};background:{bg};')
 
     def setFont(self, size:int=7, bold:bool=True, name:str=None):
         fo = QFont()
-        if not name:
+        if name:  # Corregido: era "if not name"
             fo.setFamily(name)
         fo.setPointSize(size)
         fo.setBold(bold)
@@ -113,9 +125,9 @@ class Title(QLabel):
             case _:self.setAlignment(Qt.AlignCenter)
 
 
-class Overlay(Title, QLabel):
+class Overlay(QLabel):  # Corregido: solo hereda de QLabel
     def __init__(self, *args, **kw):
-        super(Title, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)  # Corregido: super() normal
         self.__configOverlay()
     
     def __configOverlay(self):
@@ -127,10 +139,31 @@ class Overlay(Title, QLabel):
         align:str='nc', mg:int=0
     ):
         text = f'{" "*mg}{text}{" "*mg}'
-        super(Title, self).setText(text)
+        super().setText(text)
         self.setFont(size, bold, name)
         self.setColors(fg, bg)
         self.setAlign(coord=align)
+
+    def setColors(self, fg:str='white', bg:str='blue'):
+        self.setStyleSheet(f'color:{fg};background:{bg};')
+
+    def setFont(self, size:int=7, bold:bool=True, name:str=None):
+        fo = QFont()
+        if name:
+            fo.setFamily(name)
+        fo.setPointSize(size)
+        fo.setBold(bold)
+        super().setFont(fo)
+
+    def setAlign(self, coord:str='c'):
+        match coord:
+            case 'n':self.setAlignment(Qt.AlignTop)
+            case 's':self.setAlignment(Qt.AlignBottom)
+            case 'w':self.setAlignment(Qt.AlignLeft)
+            case 'e':self.setAlignment(Qt.AlignRight)
+            case 'nc':self.setAlignment(Qt.AlignLeading | Qt.AlignTop | Qt.AlignHCenter)
+            case 'sc':self.setAlignment(Qt.AlignLeading | Qt.AlignBottom | Qt.AlignHCenter)
+            case _:self.setAlignment(Qt.AlignCenter)
 
 
 class Viewer(QLabel):
@@ -143,11 +176,7 @@ class Viewer(QLabel):
         pol = QSizePolicy(QSizePolicy.Policy.Ignored , QSizePolicy.Policy.Ignored)
         self.setSizePolicy(pol)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # self.lb_op = QLabel(self)
         self.lb_op = Overlay(self)
-        # self.lb_op.setStyleSheet("background-color:rgba(10,5,10,88);")
-        # self.lb_op.hide()
-        # self.lb_op.setScaledContents(True)
         self.setScaledContents(True)
 
     def reloadVariables(self):
@@ -172,32 +201,47 @@ class Viewer(QLabel):
             self._setImageSimple(image_file)
 
     def resizeEvent(self, event):
+        # Verificar que el evento y el widget estén en estado válido
+        if not event or not event.size().isValid():
+            return
+        
         super().resizeEvent(event)
-        sz = event.size()
-        self.lb_op.setGeometry(0,0,sz.width(),sz.height())
+        
+        # Verificar que el widget esté completamente inicializado
+        if hasattr(self, 'lb_op') and self.lb_op and self.lb_op.isVisible():
+            sz = event.size()
+            # Verificar que el tamaño sea válido y no esté en transición
+            if sz.width() > 0 and sz.height() > 0 and self.isVisible():
+                try:
+                    self.lb_op.setGeometry(0, 0, sz.width(), sz.height())
+                except:
+                    # Ignorar errores durante transiciones de maximizar/minimizar
+                    pass
 
     def enterEvent(self, event):
-        if self.OPACITY:
+        if self.OPACITY and hasattr(self, 'lb_op'):
             self.lb_op.hide()
         if hasattr(self, 'gviewer'):
             self.gviewer.setPaused(False)
 
     def leaveEvent(self, event):
-        if self.OPACITY:
+        if self.OPACITY and hasattr(self, 'lb_op'):
             self.lb_op.show()
         if hasattr(self, 'gviewer'):
             self.gviewer.setPaused(True)
 
     def showOverlay(self, b:bool=True):
-        self.lb_op.show() if b else self.lb_op.hide()
-        self.OPACITY = b
+        if hasattr(self, 'lb_op'):
+            self.lb_op.show() if b else self.lb_op.hide()
+            self.OPACITY = b
 
     def opConfig(self, text:str, **kw):
         """text:str,
         fg:str='white', bg:str='rgba(10,5,10,160)',
         size:int=12, bold:bool=True, name:str='Consolas',
         align:str='c', mg:int=0"""
-        self.lb_op.setText(text, **kw)
+        if hasattr(self, 'lb_op'):
+            self.lb_op.setText(text, **kw)
 
     def setOverlay(
         self, text:str='', show:bool=True, **kw
@@ -219,7 +263,6 @@ class Card(Viewer):
         self.lb_title = Title(self)
         self.lb_title.pos = 'sw'
         self.lb_num = Title(self)
-        # self.lb_num.mg = 1
         self.lb_num.pos = 'se'
 
     def setTitle(self, text:str, **kw):
@@ -231,17 +274,29 @@ class Card(Viewer):
             name: str = 'Consolas',
             align: str = 'c'"""
         self.lb_title.setText(text, **kw)
-        # self.lb_title.x = 20
-        # self.lb_title.y = 14
 
     def setNum(self, text:str, **kw):
         self.lb_num.mg = 0
         self.lb_num.setText(text, **kw)
 
     def resizeEvent(self, event):
+        # Verificar que el evento sea válido
+        if not event or not event.size().isValid():
+            return
+            
         super().resizeEvent(event)
-        self.lb_title.moveUpdate()
-        self.lb_num.moveUpdate()
+        
+        # Verificar que los widgets estén inicializados y visibles antes de actualizarlos
+        if hasattr(self, 'lb_title') and self.lb_title and self.isVisible():
+            try:
+                self.lb_title.moveUpdate()
+            except:
+                pass
+        if hasattr(self, 'lb_num') and self.lb_num and self.isVisible():
+            try:
+                self.lb_num.moveUpdate()
+            except:
+                pass
 
 
 class VentanaPrincipal(QMainWindow):
@@ -252,29 +307,36 @@ class VentanaPrincipal(QMainWindow):
     def _configVentanaPrincipal(self):
         self.setWindowTitle("Mi Ventana")
         self.setGeometry(100, 40, 280, 200)
-        # icono "textarea-icon16.png" 16px
+        
+        # Configurar flags de ventana para mejor manejo de maximize/minimize
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.Window)
+        
         icon = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYBAMAAAASWSDLAAAAD1B" \
         "MVEUAAACoqKioqKioqKioqKjGKhJaAAAABHRSTlMAARAfdZsTCQAAACNJR" \
         "EFUeJxjcEECDORxnJUggIAMNZTh4LgosFDGcRZgIs3bAP2FROGW0Q0XAAA" \
         "AAElFTkSuQmCC"
         self.setWindowIcon(self.getQicon(str_b64=icon))
+        
         central_widget = QWidget(self)
-
-        image = r"otros/image1.jpg"
-        # image = r"otros/image2.gif"
         vly = QVBoxLayout(central_widget)
         vly.setContentsMargins(0,0,0,0)
-        # self.wg = Viewer(parent=central_widget)
+        
+        # Crear el widget Card
         self.wg = Card(parent=central_widget)
-        self.wg.setImage(image_file=image)
+        
+        # Verificar que el archivo de imagen exista antes de cargarlo
+        image = r"otros/image1.jpg"
+        try:
+            self.wg.setImage(image_file=image)
+        except Exception as e:
+            print(f"Error cargando imagen: {e}")
+            # Continuar sin imagen si hay error
+        
         self.wg.setTitle(text='mi titulo uno', align='w')
         self.wg.setNum('05', bg='black')
-        # self.wg.lb_num.pos = 'nw'
 
         vly.addWidget(self.wg)
         self.setCentralWidget(central_widget)
-        self.setLayout(vly)
-
 
     def getQicon(self, str_b64:str):
         pix = QPixmap()
@@ -282,11 +344,6 @@ class VentanaPrincipal(QMainWindow):
         qicon = QIcon()
         qicon.addPixmap(pix)
         return qicon
-    
-    # def resizeEvent(self, event):
-    #     super().resizeEvent(event)
-    #     self.wg.resizeImage()
-        # print(self.geometry())
 
 
 if __name__ == '__main__':

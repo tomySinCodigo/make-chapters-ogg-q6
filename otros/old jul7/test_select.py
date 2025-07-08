@@ -28,7 +28,7 @@ class TestSelectS(QMainWindow):
         self.gb_parent.setRowCol(2, 1)
         self.gb_parent.columnsEquals()
         self.gb_child = GalleryBase()
-        self.gb_child.setRowCol(1, 4)
+        self.gb_child.setRowCol(1, 3)
         self.gb_child.columnsEquals()
         self.split.addWidget(self.gb_parent)
         self.split.addWidget(self.gb_child)
@@ -38,69 +38,90 @@ class TestSelectS(QMainWindow):
         self.timer = QTimer()
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(self.gb_parent.heightAuto)
-        self.gb_parent.cellClicked.connect(self.itemChoice)
-        # self.gb_child.cellClicked.connect(self.itemChoiceChild)
 
-    def getDirs(self, dir=str) -> list:
-        sf = SearchFiles(path=dir)
+        sf = SearchFiles(path='T:/TAG/RECURSOS/personajes2')
+        data = sf.getWalls()
+        # pprint(data)
+        # {'images': {'Esdeath': 'T:/TAG/RECURSOS/personajes2/akame ga kill/Esdeath.png',
+        #      'akame ga kill': 'T:/TAG/RECURSOS/personajes2/akame ga kill/akame '
+        #                       'ga kill.png'},
+        # 'name': 'akame ga kill',
+        # 'path': 'T:/TAG/RECURSOS/personajes2/akame ga kill',
+        # 'wall': 'T:/TAG/RECURSOS/personajes2/akame ga kill/akame ga kill.png'}
+
+        # walls = [d.get('wall') for d in data]
+        # self.gb_parent.setImages(images=walls, cols=2)
+        # usando setWalls
+        self.gb_parent.setWalls(data=data, cols=2)
+        self.gb_parent.cellClicked.connect(self.itemChoice)
+        self.gb_child.cellClicked.connect(self.itemChoiceChild)
+
+
+    def getDirs(self, folder:str) -> list:
+        sf = SearchFiles(path=folder)
         return sf.getDirs()
     
-    def getFiles(self, dir:str, **kw) -> list:
-        sf = SearchFiles(path=dir)
+    def getFiles(self, folder:str, **kw) -> list:
+        sf = SearchFiles(path=folder)
         return sf.getImages(**kw)
-    
+
     def resizeEvent(self, event):
         self.timer.start(400)
-    
-    def testUno(self):
-        sf = SearchFiles(path='T:/TAG/RECURSOS/personajes2')
-        data = sf.getCovers()
-        self.gb_parent.setCovers(data=data, cols=2)
 
     def itemChoice(self, row:int, col:int):
         select = self.gb_parent.selectCard(row, col)
         if select:
             name, path = select
-            parent = Path(path).parent.as_posix()
-            print(name, path, parent)
-            sf = SearchFiles(path=parent)
+            print('name:: ', name, path)
+            sf = SearchFiles(path=path)
             if name == '00':
                 images = []
-                # parent = Path(path).parent.as_posix()
-                # sf = SearchFiles(parent)
+                parent = Path(path).parent.as_posix()
+                sf = SearchFiles(parent)
                 images = sf.getFiles()
                 dirs = sf.getDirs()
-                for dir in dirs:
-                    sf_sub = SearchFiles(path=dir)
-                    imgs = sf_sub.getImages()
+                for folder in dirs:
+                    _sf = SearchFiles(path=folder)
+                    imgs = _sf.getImages()
                     images.extend(imgs)
-                    extra = ()
-                    for subdir in sf_sub.getDirs():
-                        sf_sub2 = SearchFiles(subdir)
-                        data = sf_sub2.getImageByDir()
+                    extra = []
+                    print('subfolder:: ', _sf.getDirs())
+                    for subdir in _sf.getDirs():
+                        sfsub = SearchFiles(subdir)
+                        data = sfsub.getOneImageData()
                         if data:
                             extra.append(data)
                     images.extend(extra)
-                self.gb_child.setImages(files=images, cols=4)
+                # pprint(images)
+                print(len(images))
+                self.gb_child.setImages(images=images, cols=3)
             else:
                 images = sf.getImages()
                 extra = []
-                for dir in sf.getDirs():
-                    sf_sub = SearchFiles(dir)
-                    data = sf_sub.getImageByDir()
+                print('subfolder:: ', sf.getDirs())
+                for subdir in sf.getDirs():
+                    sfsub = SearchFiles(subdir)
+                    data = sfsub.getOneImageData()
                     if data:
                         extra.append(data)
                 images.extend(extra)
                 if images:
-                    self.gb_child.setImages(files=images, cols=4)
+                    pprint(images)
+                    self.gb_child.setImages(images=images, cols=3)
+                else:
+                    print("no hay images")
 
+    def itemChoiceChild(self, row:int, col:int):
+        select = self.gb_child.selectCard(row, col)
+        if select:
+            name, path = select
+            print(name, path)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     vn = TestSelectS()
     vn.test2Galleries()
-    vn.testUno()
     vn.setGeometry(100, 50, 950, 600)
     vn.show()
     sys.exit(app.exec())

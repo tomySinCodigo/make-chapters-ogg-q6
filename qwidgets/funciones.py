@@ -1,25 +1,42 @@
-from pathlib import Path
 import os
+import logging
+from pathlib import Path
 from random import randint
 
 
 class SearchFiles:
-    def __init__(self, path:str):
+    """obtener archivos de `path` (imagenes)"""
+    def __init__(self, path:str) -> None:
         self.path = Path(path).as_posix()
         self.d = self._getAll(self.path)
 
+    def error(self, err, msg:str="") -> None:
+        if msg:
+            msg = f'[{self.__class__.__name__}]{msg} -- '
+        logging.error(f'{msg}{err}')
+
     def _getAll(self, path:str) -> dict:
+        """obten todos los archivos: {dirs:[...], files:[...]}"""
         d = {'dirs':[], 'files':[]}
-        with os.scandir(path) as files:
-            for file in files:
-                _ = 'files' if file.is_file() else 'dirs'
-                d[_].append(Path(file).as_posix())
-        return d
+        try:
+            with os.scandir(path) as files:
+                for file in files:
+                    _ = 'files' if file.is_file() else 'dirs'
+                    d[_].append(Path(file).as_posix())
+        except FileNotFoundError as efile:
+            self.error(f'getAll, {efile}')
+        except Exception as e:
+            self.error(e)
+            raise
+        finally:
+            return d
     
     def getDirs(self) -> list:
+        """obten solo los directorios"""
         return self.d.get('dirs')
     
     def getFiles(self) -> list:
+        """obten solo los archivos"""
         return self.d.get('files')
     
     def bySuffix(self, suffixes:list=[], ex:list=[]) -> list:
@@ -31,53 +48,45 @@ class SearchFiles:
         return res
     
     def getImages(self, suffixes:list=['.jpg', '.png', '.gif', '.jpeg'], ex:list=[]) -> list:
-        # return {Path(path).stem:path for path in self.bySuffix(suffixes=suffixes, ex=ex)}
+        """obten imagenes suffixes:[formatos] ex:[excluye]"""
         return self.bySuffix(suffixes=suffixes, ex=ex)
     
-    def getWalls(self) -> list:
-        data = []
-        folders = self.getDirs()
-        for folder in folders:
-            sf = SearchFiles(folder)
-            images = {Path(img).stem:img for img in sf.getFiles()}
-            name_folder = Path(folder).name.lower()
-            d = {
-                'name':name_folder,
-                'path':folder,
-                'images':images,
-                'dir':folder
+    def getImageByDir(self, **kwargs) -> str:
+        """obten un cover (imagen) por directorio"""
+        images = self.getImages(**kwargs)
+        img = Path(images[randint(0, len(images)-1)]) if images else ""
+        if img:
+            return {
+                'path':img.as_posix(),
+                'dir':img.parent,
+                'dirname':img.parent.stem,
+                'name':img.stem
             }
-            if name_folder in images.keys():
-                d['wall'] = images[name_folder]
-            elif 'portada' in images.keys():
-                # sf = SearchFiles(folder)
-                # imgs = {Path(img).stem:img for img in sf.getFiles()}
-                d['wall'] = images['portada']
-            else:
-                d['wall'] = 'defo.png'
-            data.append(d)
-        return data
-    
-    def getOneImage(self, *args) -> str:
-        images = self.getImages(*args)
-        if images:
-            return images[randint(0, len(images))-1]
-        else:
-            return []
-        
-    def getOneImageData(self, *args) -> dict:
-        images = self.getImages(*args)
-        if images:
-            d = {}
-            _ = Path(images[randint(0, len(images))-1])
-            d['path'] = _.as_posix()
-            d['parent'] = _.parent
-            d['dirname'] = _.parent.stem
-            d['name'] = _.stem
-            return d
         else:
             return None
     
+    def getCovers(self) -> list[dict]:
+        """obten una lista de diccionarios (1 cover por directorio)"""
+        covers = []
+        for dir in self.getDirs():
+            sf = SearchFiles(dir)
+            images = {Path(img).stem:img for img in sf.getImages()}
+            dirname = Path(dir).stem
+            d = {
+                'dirname':dirname,
+                'path':dir,
+                'images':images,
+            }
+            if dirname in images.keys():
+                d['cover'] = images[dirname]
+            elif 'cover' in images.keys():
+                d['cover'] = images['cover']
+            elif 'portada' in images.keys():
+                d['cover'] = images['portada']
+            else:
+                d['cover'] = 'defo.png'
+            covers.append(d)
+        return covers
 
 
 if __name__ == '__main__':
@@ -92,8 +101,8 @@ if __name__ == '__main__':
     # print(f'TIPO:: {type(next(res))}')
     # print(next(res))
 
-    # obten imagen (wall) de cada carpeta
+    # obten imagen (cover) de cada carpeta
+    # print(sf.getImageByDir())
     # r1 = 'T:/TAG/RECURSOS/personajes2'
-    # rser = "T:/TAG/RECURSOS/personajes2/sono bisque doll/Marin Kitagawa"
-    # sf = SearchFiles(rser)
-    # print(sf.getOneImage())
+    # sf = SearchFiles(r1)
+    # pprint(sf.getCovers())

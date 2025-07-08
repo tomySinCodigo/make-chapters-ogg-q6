@@ -9,23 +9,19 @@ class CardViewer(Card):
         self.__configCardViewer()
 
     def __configCardViewer(self):
-        self.STEM = None
-        self.PATH = None
-        self.DATA = None
+        self.d = {}
 
     def setImage(self, image_file):
         path = Path(image_file)
-        self.PATH = path.as_posix()
-        self.STEM = path.stem
+        self.d['path'] = path.as_posix()
+        self.d['stem'] = path.stem
         super().setImage(image_file)
+        
+    def set(self, **kwargs):
+        self.d.update(**kwargs)
 
-    def setData(self, dc:dict) -> None:
-        self.DATA = dc
-        if 'name' in dc.keys():
-            self.STEM = dc.get('name')
-        if 'path' in dc.keys():
-            self.PATH = dc.get('path')
-
+    def get(self, key:str) -> str|int|None:
+        return self.d.get(key)
 
 
 class GalleryBase(QTableWidget):
@@ -41,89 +37,84 @@ class GalleryBase(QTableWidget):
         self.AR = 4/6
 
     def setRowCol(self, rows:int, cols:int):
+        """limpia y agrega las cantidad de celdas indicadas"""
         self.clearContents()
         self.setRowCount(rows)
         self.setColumnCount(cols)
 
     def columnsEquals(self):
+        """ajustar el ancho de las columnas (para que sean iguales)"""
         self.hh.setSectionResizeMode(QHeaderView.Stretch)
 
     def heightAuto(self):
+        """ajusta la altura de la celda, segun AR"""
         h = int(self.hh.sectionSize(0)/self.AR)
         for irow in range(self.rowCount()):
             self.setRowHeight(irow, h)
 
     def getIndexes(self, n:int, cols:int=3) -> list:
+        """obten una lista con indices de cada celda para n:items"""
         return [(irow, icol) \
             for irow, _ in enumerate(range(0,n,cols)) \
             for icol in range(cols)]
     
-    def setImages(self, images:list, cols:int=3):
-        indexes = self.getIndexes(len(images), cols=cols)
-        print('indexes:: ', indexes)
-        print(indexes[-1][0])
-        self.setRowCol(rows=indexes[-1][0]+1, cols=cols)
+    def setImages(self, files:list|dict, cols:int=3):
+        indexes = self.getIndexes(len(files), cols=cols)
+        nrows = indexes[-1][0]+1
+        self.setRowCol(rows=nrows, cols=cols)
         self.columnsEquals()
+    
+        for index, file in enumerate(files):
+            if isinstance(file, dict):
+                d = files.pop(index)
+                files.insert(0, d)
 
-        for index, elem in enumerate(images):
-            if isinstance(elem, dict):
-                d = images.pop(index)
-                images.insert(0, d)
-
-        for i, img in enumerate(images):
-            cv = CardViewer()
-            if isinstance(img, dict):
-                cv.setImage(image_file=img.get('path'))
-                name = img.get('dirname')
-                cv.setOverlay(
-                    text=name,
-                    bg='rgba(0,0,0,120)',
-                    fg='tgba(255,255,255, 210)'
-                )
-                cv.setTitle(name)
-                cv.setData({'name':name})
+        for index, file in enumerate(files):
+            if isinstance(file, dict):
+                image = file.get('path')
+                name = file.get('dirname')
             else:
-                cv.setImage(image_file=img)
-                cv.setOverlay(
-                    text=Path(img).stem,
-                    bg='rgba(0,0,0,120)',
-                    fg='tgba(255,255,255, 210)'
-                )
-                cv.setTitle(Path(img).stem)
+                name = Path(file).stem
+                image = file
+            cv = self._setImage(image, name)
 
-            item = QTableWidgetItem(str(i))
-            ix = indexes[i]
-            self.setItem(ix[0], ix[1], item)
-            self.setCellWidget(ix[0], ix[1], cv)
-            # print('rc: ', ix[0], ix[1], img)
-            cv.setNum(i, bg='black', fg='white')
-
-        self.heightAuto()
-
-    def selectCard(self, row=None, col=None):
-        wg = self.cellWidget(row, col)
-        if wg:
-            name, path = wg.STEM, wg.PATH
-            return name, path
-        
-    def setWalls(self, data:list, cols:int=3) -> None:
-        indexes = self.getIndexes(len(data), cols=cols)
-        self.setRowCol(rows=indexes[-1][0], cols=cols)
-        self.columnsEquals()
-
-        for index, d in enumerate(data):
-            cv = CardViewer()
-            cv.setImage(image_file=d.get('wall'))
             item = QTableWidgetItem(str(index))
             ix = indexes[index]
             self.setItem(ix[0], ix[1], item)
             self.setCellWidget(ix[0], ix[1], cv)
             cv.setNum(index, bg='black', fg='white')
-            cv.setOverlay(
-                text=d.get('name'),
-                bg='rgba(0,0,0,120)',
-                fg='tgba(255,255,255, 210)'
-            )
-            cv.setTitle(text=d.get('name'))
-            cv.setData(dc=d)
+        self.heightAuto()
+        
+    def _setImage(self, image:str, name:str):
+        cv = CardViewer()
+        cv.setImage(image_file=image)
+        cv.setOverlay(
+            text=name,
+            bg='rgba(0,0,0,120)',
+            fg='tgba(255,255,255, 210)'
+        )
+        cv.setTitle(name)
+        return cv
+    
+    def selectCard(self, row:int=None, col:int=None):
+        wg = self.cellWidget(row, col)
+        if wg:
+            name, path = wg.get('stem'), wg.get('path')
+            return name, path
+
+    def setCovers(self, data:list, cols:int=3) -> None:
+        indexes = self.getIndexes(len(data), cols=cols)
+        self.setRowCol(rows=indexes[-1][0], cols=cols)
+        self.columnsEquals()
+
+        for index, d in enumerate(data):
+            img = d.get('cover')
+            name = d.get('dirname')
+            cv = self._setImage(image=img, name=name)
+
+            item = QTableWidgetItem(str(index))
+            ix = indexes[index]
+            self.setItem(ix[0], ix[1], item)
+            self.setCellWidget(ix[0], ix[1], cv)
+            cv.set(path=d.get('dir'))
         self.heightAuto()

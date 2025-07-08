@@ -1,5 +1,3 @@
-import os
-os.environ['QT_LOGGING_RULES'] = '*=false'
 import sys
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QSizePolicy, QWidget,
