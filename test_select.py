@@ -61,10 +61,35 @@ class TestSelectS(QMainWindow):
         select = self.gb_parent.selectCard(row, col)
         if select:
             data = select.data
+            dir = data.get('dir')
+            sf = SearchFiles(path=dir)
+            images = sf.getImages()
+            dirs = sf.getDirs()
+
             if data.get('dirname')=='00':
                 ...
             else:
                 pprint(data)
+                # else:
+                #     images = sf.getImages()
+                #     extra = []
+                #     for dir in sf.getDirs():
+                #         sf_sub = SearchFiles(dir)
+                #         data = sf_sub.getImageByDir()
+                #         if data:
+                #             extra.append(data)
+                #     images.extend(extra)
+                #     if images:
+                #         self.gb_child.setImages(files=images, cols=4)
+                extra = []
+                for dir in dirs:
+                    sf_sub = SearchFiles(path=dir)
+                    data_cover = sf_sub.getImageByDir()
+                    if data_cover:
+                        extra.append(data_cover)
+                images.extend(extra)
+            if images:
+                self.gb_child.setImages(files=images, cols=4)
             
 
             # name, path = select

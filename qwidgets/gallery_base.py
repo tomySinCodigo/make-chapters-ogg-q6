@@ -26,12 +26,13 @@ class CardViewer(Card):
     def setData(self, dc:dict, image='image'):
         img = dc.get(image)
         dirname = dc.get('dirname')
+        # if img:
         self.setImage(image_file=img)
         self.set(dc)
         self.setOverlay(
             text=dirname,
             bg='rgba(0,0,0,120)',
-            fg='tgba(255,255,255, 210)'
+            fg='rgba(255,255,255, 210)'
         )
         self.setTitle(dirname)
 
@@ -83,7 +84,7 @@ class GalleryBase(QTableWidget):
 
         for index, file in enumerate(files):
             if isinstance(file, dict):
-                image = file.get('cover')
+                image = file.get('path')
                 name = file.get('dirname')
             else:
                 image = file
@@ -103,7 +104,7 @@ class GalleryBase(QTableWidget):
         cv.setOverlay(
             text=name,
             bg='rgba(0,0,0,120)',
-            fg='tgba(255,255,255, 210)'
+            fg='rgba(255,255,255, 210)'
         )
         cv.setTitle(name)
         return cv

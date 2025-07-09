@@ -38,3 +38,10 @@ obtiene las imagenes de cada folder y al seleccionar la imagen se obtiene las im
 **funciones** 
 
 al obtener los indices con `getIndexes` hace falta sumar +1 para obtener la cantidad correcta de filas
+
+
+**gallery base**
+
+- ahora obtiene un diccionario en lugar de un `path` (str)
+- reemplazo de `cover` por `path` al no tener un cover retornaba None (setImages)
+

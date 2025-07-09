@@ -54,11 +54,11 @@ class SearchFiles:
     def getImageByDir(self, **kwargs) -> str:
         """obten un cover (imagen) por directorio"""
         images = self.getImages(**kwargs)
-        img = Path(images[randint(0, len(images)-1)]) if images else ""
+        img = Path(images[randint(0, len(images)-1)]) if images else None
         if img:
             return {
                 'path':img.as_posix(),
-                'dir':img.parent,
+                'dir':img.parent.as_posix(),
                 'dirname':img.parent.stem,
                 'name':img.stem
             }
