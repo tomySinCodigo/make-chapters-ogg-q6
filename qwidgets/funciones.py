@@ -73,9 +73,9 @@ class SearchFiles:
             images = {Path(img).stem:img for img in sf.getImages()}
             dirname = Path(dir).stem
             d = {
+                'dir':dir,
                 'dirname':dirname,
-                'path':dir,
-                'images':images,
+                'images':images
             }
             if dirname in images.keys():
                 d['cover'] = images[dirname]
@@ -84,7 +84,11 @@ class SearchFiles:
             elif 'portada' in images.keys():
                 d['cover'] = images['portada']
             else:
-                d['cover'] = 'defo.png'
+                img = sf.getImageByDir()
+                if img:
+                    d['cover'] = img.get('path')
+                else:
+                    d['cover'] = 'defo.png'
             covers.append(d)
         return covers
 

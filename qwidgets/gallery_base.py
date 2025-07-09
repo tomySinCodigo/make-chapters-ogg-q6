@@ -9,19 +9,31 @@ class CardViewer(Card):
         self.__configCardViewer()
 
     def __configCardViewer(self):
-        self.d = {}
+        self.data = {}
 
     def setImage(self, image_file):
         path = Path(image_file)
-        self.d['path'] = path.as_posix()
-        self.d['stem'] = path.stem
+        self.data['path'] = path.as_posix()
+        self.data['stem'] = path.stem
         super().setImage(image_file)
         
-    def set(self, **kwargs):
-        self.d.update(**kwargs)
+    def set(self, kwargs):
+        self.data.update(kwargs)
 
     def get(self, key:str) -> str|int|None:
-        return self.d.get(key)
+        return self.data.get(key)
+    
+    def setData(self, dc:dict, image='image'):
+        img = dc.get(image)
+        dirname = dc.get('dirname')
+        self.setImage(image_file=img)
+        self.set(dc)
+        self.setOverlay(
+            text=dirname,
+            bg='rgba(0,0,0,120)',
+            fg='tgba(255,255,255, 210)'
+        )
+        self.setTitle(dirname)
 
 
 class GalleryBase(QTableWidget):
@@ -71,11 +83,11 @@ class GalleryBase(QTableWidget):
 
         for index, file in enumerate(files):
             if isinstance(file, dict):
-                image = file.get('path')
+                image = file.get('cover')
                 name = file.get('dirname')
             else:
-                name = Path(file).stem
                 image = file
+                name = Path(file).stem
             cv = self._setImage(image, name)
 
             item = QTableWidgetItem(str(index))
@@ -96,11 +108,18 @@ class GalleryBase(QTableWidget):
         cv.setTitle(name)
         return cv
     
-    def selectCard(self, row:int=None, col:int=None):
+    def _setImageData(self, dc:dict):
+        cv = CardViewer()
+        cv.setData(dc=dc, image='cover')
+        return cv
+    
+    def selectCard(self, row:int=None, col:int=None) -> CardViewer:
         wg = self.cellWidget(row, col)
         if wg:
-            name, path = wg.get('stem'), wg.get('path')
-            return name, path
+            # name, path = wg.get('stem'), wg.get('path')
+            # print("wg::: ", wg.d)
+            # return name, path
+            return wg
 
     def setCovers(self, data:list, cols:int=3) -> None:
         indexes = self.getIndexes(len(data), cols=cols)
@@ -108,13 +127,14 @@ class GalleryBase(QTableWidget):
         self.columnsEquals()
 
         for index, d in enumerate(data):
-            img = d.get('cover')
-            name = d.get('dirname')
-            cv = self._setImage(image=img, name=name)
+            # img = d.get('cover')
+            # name = d.get('dirname')
+            # cv = self._setImage(image=img, name=name)
+            cv = self._setImageData(dc=d)
 
             item = QTableWidgetItem(str(index))
             ix = indexes[index]
             self.setItem(ix[0], ix[1], item)
             self.setCellWidget(ix[0], ix[1], cv)
-            cv.set(path=d.get('dir'))
+            # cv.set(path=d.get('path'))
         self.heightAuto()

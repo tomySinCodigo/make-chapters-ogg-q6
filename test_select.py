@@ -60,39 +60,47 @@ class TestSelectS(QMainWindow):
     def itemChoice(self, row:int, col:int):
         select = self.gb_parent.selectCard(row, col)
         if select:
-            name, path = select
-            parent = Path(path).parent.as_posix()
-            print(name, path, parent)
-            sf = SearchFiles(path=parent)
-            if name == '00':
-                images = []
-                # parent = Path(path).parent.as_posix()
-                # sf = SearchFiles(parent)
-                images = sf.getFiles()
-                dirs = sf.getDirs()
-                for dir in dirs:
-                    sf_sub = SearchFiles(path=dir)
-                    imgs = sf_sub.getImages()
-                    images.extend(imgs)
-                    extra = ()
-                    for subdir in sf_sub.getDirs():
-                        sf_sub2 = SearchFiles(subdir)
-                        data = sf_sub2.getImageByDir()
-                        if data:
-                            extra.append(data)
-                    images.extend(extra)
-                self.gb_child.setImages(files=images, cols=4)
+            data = select.data
+            if data.get('dirname')=='00':
+                ...
             else:
-                images = sf.getImages()
-                extra = []
-                for dir in sf.getDirs():
-                    sf_sub = SearchFiles(dir)
-                    data = sf_sub.getImageByDir()
-                    if data:
-                        extra.append(data)
-                images.extend(extra)
-                if images:
-                    self.gb_child.setImages(files=images, cols=4)
+                pprint(data)
+            
+
+            # name, path = select
+            # parent = Path(path).parent.as_posix()
+            # print(name, path)
+
+            # sf = SearchFiles(path=parent)
+            # if name == '00':
+            #     images = []
+            #     # parent = Path(path).parent.as_posix()
+            #     # sf = SearchFiles(parent)
+            #     images = sf.getFiles()
+            #     dirs = sf.getDirs()
+            #     for dir in dirs:
+            #         sf_sub = SearchFiles(path=dir)
+            #         imgs = sf_sub.getImages()
+            #         images.extend(imgs)
+            #         extra = ()
+            #         for subdir in sf_sub.getDirs():
+            #             sf_sub2 = SearchFiles(subdir)
+            #             data = sf_sub2.getImageByDir()
+            #             if data:
+            #                 extra.append(data)
+            #         images.extend(extra)
+            #     self.gb_child.setImages(files=images, cols=4)
+            # else:
+            #     images = sf.getImages()
+            #     extra = []
+            #     for dir in sf.getDirs():
+            #         sf_sub = SearchFiles(dir)
+            #         data = sf_sub.getImageByDir()
+            #         if data:
+            #             extra.append(data)
+            #     images.extend(extra)
+            #     if images:
+            #         self.gb_child.setImages(files=images, cols=4)
 
 
 
